@@ -21,16 +21,18 @@ kH2O = 0.61041; %W/mK Thermal Conductivity of Water
 TDP = 250; %Total Dissipated Power
 
 %Water inforation
-Wmu = 8.5288e-4;
-rho = 996.54;
-R=W/L;
+Wmu = 8.5288e-4;  % Viscosity of water
+rho = 996.54;     % Density of water kg/m^3
+R=W/L;            % Ratio of Width/Length 
 
 %Get nodal spacing, define dely, delV, and the arraySize
 delx = input('Define nodal spacing (.5,1,2.5,5)mm: \n');
 dely = delx*R;
 delV = delx*dely;
 meshSize = (round(L/delx))+1;
+N = meshSize;
 
+tempDist = (64*ones(meshSize)); % Create initial array 
 
 HeatGeneration; % run the Heat Generation Script
 tic
@@ -42,9 +44,9 @@ options = optimoptions('fsolve','Display','off','FunctionTolerance',1e-9,...
   'OptimalityTolerance',1e-9,'StepTolerance',1e-9,'MaxIter',1e5,...
   'MaxFunctionEvaluations',1e5);
 %Setup anon function and then solve for Umin
-Ueq = @(Uinf)TempSolver(Uinf,Tamb,delx,eGenAverage,meshSize);  %memoize function
-memoizedUeq = memoize(Ueq);
-Umin = fsolve(@(Uinf)memoizedUeq(Uinf)-Tdiemax,2.27,options); 
+Ueq = @(Uinf)Vmethod(Uinf,Tamb,tempDist,delx,eGenAverage);  %memoize function
+%memoizedUeq = memoize(Ueq);
+Umin = fsolve(@(Uinf) Ueq(Uinf)-Tdiemax,2.27,options); 
 
 
 %create array of heat flux per square
@@ -56,9 +58,10 @@ tempDistUmin = tempDist;
 %Annon function to use with fsolve
 %solve for Maximum ambient temperature 
 Uinf=3*Umin; %Multiply Umin by 3 to model pump capacity
-Tmaxeq = @(Tinf)TempSolver(Uinf,Tinf,delx,eGenAverage,meshSize); 
-memTmaxeq = memoize(Tmaxeq);
-TmaxAmb = fsolve(@(Tinf)memTmaxeq(Tinf)-.9*Tdiemax,35.57,options); 
+Tmaxeq = @(Tinf)Vmethod(Uinf,Tinf,tempDist,delx,eGenAverage); 
+% memTmaxeq = memoize(Tmaxeq);
+initGuess = 35.57;
+TmaxAmb = fsolve(@(Tinf)Tmaxeq(Tinf)-.9*Tdiemax,1,options); 
 
 %%
 

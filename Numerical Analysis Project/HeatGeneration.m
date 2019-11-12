@@ -21,7 +21,7 @@ dumbx = 0:0.1:L;
 dumby = 0:0.1:W;
 [xx,yy] = meshgrid(dumbx,dumby);
 figure;
-%Output the Volumetric Heat Generation Contour MAp
+%Output the Volumetric Heat Generation Contour Map
 contourf(xx,yy, eGenFun(xx,yy),40,'Linestyle','none')                       
 title('Volumetric Heat Generation')
 cBar = colorbar('southoutside'); 
